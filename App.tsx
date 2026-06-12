@@ -2,8 +2,8 @@ import { NotesProvider } from './context/NotesContext';
 import RootNavigator from './navigation/RootNavigator';
 
 export default function App() {
-  return(
+  return (
     <NotesProvider>
-    <RootNavigator />
+      <RootNavigator />
     </NotesProvider>);
 }
