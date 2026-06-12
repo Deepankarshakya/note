@@ -1,35 +1,32 @@
 import {Pressable, PressableProps, StyleSheet, Text} from "react-native";
+import {useTheme} from "../context/ThemeContext";
+import {spacing, borderRadius, shadows} from "./theme";
 
-export  function EditorPressable(props: PressableProps & {text: string}){
+export function EditorPressable(props: PressableProps & {text: string}){
+    const {colors} = useTheme();
     return(
-        <Pressable
-        {...props} style={styles.button}
-        >
-            <Text style={styles.text}>
-                {props.text}
-            </Text>
-
+        <Pressable {...props} style={({pressed}) => [
+            styles.button,
+            {backgroundColor: colors.primaryLight, borderColor: colors.primary},
+            pressed && {backgroundColor: colors.primaryLight, opacity: 0.7}
+        ]}>
+            <Text style={[styles.text, {color: colors.primary}]}>{props.text}</Text>
         </Pressable>
     )
 }
+
 const styles = StyleSheet.create({
     button: {
-        padding:10,
-        backgroundColor: "#fff",
-        borderRadius: 10,
-        borderColor: '#d0d0d0',
+        paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.lg,
+        borderRadius: borderRadius.md,
         borderWidth: 1,
-        shadowColor: '#65ccf5',
-        shadowOffset: { width: 0, height: 5 },
-        shadowOpacity: 0.4,
-        shadowRadius: 5,
-        elevation: 10,
-        margin: 3,
-        marginTop:10,
-
+        marginLeft: spacing.sm,
+        ...shadows.sm,
     },
     text: {
-        color: '#2563eb',
         fontWeight: "bold",
-    }
+        textAlign: "center",
+        fontSize: 14,
+    },
 })

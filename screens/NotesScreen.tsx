@@ -1,11 +1,24 @@
-import { View, Text, Pressable, FlatList, TextInput, ScrollView, StyleSheet, Button } from "react-native";
+import { View, Text, FlatList, TextInput, StyleSheet, TouchableOpacity } from "react-native";
 import { useNotes } from "../context/NotesContext";
-import { useState } from "react";
+import { useState, useLayoutEffect } from "react";
 import { EditorPressable } from "../component/editpressable";
-import { DeletePressable } from "../component/DeletePressable"
+import { DeletePressable } from "../component/DeletePressable";
+import { useTheme } from "../context/ThemeContext";
+import { spacing, borderRadius, shadows, typography } from "../component/theme";
 
 export default function NotesScreen({ navigation }: any) {
     const { notes, deleteNote } = useNotes();
+    const { colors, isDark } = useTheme();
+
+    useLayoutEffect(() => {
+        navigation.setOptions({
+            headerRight: () => (
+                <TouchableOpacity onPress={() => navigation.navigate("Settings")} style={{ paddingHorizontal: 8 }}>
+                    <Text style={{ fontSize: 22, color: colors.textPrimary }}>{"\u2699"}</Text>
+                </TouchableOpacity>
+            ),
+        });
+    }, [navigation, colors.textPrimary]);
     const [search, setSearch] = useState("");
     const filteredNotes = notes.filter((note) =>
         note.title
@@ -13,78 +26,133 @@ export default function NotesScreen({ navigation }: any) {
             .includes(search.toLocaleLowerCase())
     );
     return (
-        <View style={styles.container}>
-            <Text style={styles.Numbernotes}>Number of notes : {notes.length}</Text>
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
+            <Text style={[styles.count, { color: colors.textSecondary }]}>Number of notes: {notes.length}</Text>
             <TextInput
                 placeholder="Search notes..."
                 value={search}
                 onChangeText={setSearch}
-                style={styles.search}
+                style={[styles.search, { backgroundColor: colors.inputBackground, borderColor: colors.border, color: colors.textPrimary }]}
+                placeholderTextColor={colors.textMuted}
             />
-            <ScrollView style={styles.inside}>
-
-                <FlatList
-                    data={filteredNotes}
-                    renderItem={({ item }) => (
-                        <View style={styles.file}>
-                            <View style={{flexDirection:'row'}}>
-                                <View style=
-                                {{flexDirection: 'column'}}>
-                                    <Text>{item.title}</Text>
-                                    <Text>{item.content}</Text>
-                                </View>
-                                <View style=
-                                {{flexDirection:'row-reverse'}}>
-                                    <DeletePressable
-                                        text="Delete"
-                                        onPress={() => deleteNote(item.id)}
-                                    />
-                                    <EditorPressable
-                                        text="Edit"
-                                        onPress={() =>
-                                            navigation.navigate("EditNote", {
-                                                noteId: item.id,
-                                            })
-                                        }
-                                    />
-                                </View>
+            <FlatList
+                data={filteredNotes}
+                renderItem={({ item }) => (
+                    <TouchableOpacity
+                        style={[styles.file, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}
+                        activeOpacity={0.7}
+                        onPress={() => navigation.navigate("NoteOpen", { noteId: item.id })}
+                    >
+                        <View style={styles.row}>
+                            <View style={styles.column}>
+                                <Text style={[styles.noteTitle, { color: colors.textPrimary }]}>{item.title}</Text>
+                                <Text style={[styles.noteContent, { color: colors.textSecondary }]} numberOfLines={2}>{item.content}</Text>
+                            </View>
+                            <View style={styles.actions}>
+                                <DeletePressable
+                                    text="Delete"
+                                    onPress={() => deleteNote(item.id)}
+                                />
+                                <EditorPressable
+                                    text="Edit"
+                                    onPress={() =>
+                                        navigation.navigate("EditNote", {
+                                            noteId: item.id,
+                                        })
+                                    }
+                                />
                             </View>
                         </View>
-                    )}
-                    keyExtractor={(item) => item.id}
-
-                />
-            </ScrollView>
-
-            <Button
-                title="Create Note"
-                onPress={() => navigation.navigate("CreateNote")}
+                    </TouchableOpacity>
+                )}
+                keyExtractor={(item) => item.id}
+                style={styles.list}
+                contentContainerStyle={styles.listContent}
+                ListEmptyComponent={
+                    <Text style={[styles.empty, { color: colors.textMuted }]}>No notes found. Create one!</Text>
+                }
             />
+            <TouchableOpacity
+                style={[styles.fab, { backgroundColor: colors.primary }]}
+                onPress={() => navigation.navigate("CreateNote")}
+                activeOpacity={0.8}
+            >
+                <Text style={styles.fabText}>+</Text>
+            </TouchableOpacity>
         </View>
-
-
     )
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 20,
+        padding: spacing.xl,
+    },
+    count: {
+        ...typography.caption,
+        textAlign: 'center',
+        marginBottom: spacing.md,
     },
     search: {
         borderWidth: 1,
+        borderRadius: borderRadius.md,
+        padding: spacing.md,
+        fontSize: 15,
+        marginBottom: spacing.lg,
+        ...shadows.sm,
     },
-    Numbernotes: {
-        textAlign: 'center',
-        padding: 10,
+    list: {
+        flex: 1,
+    },
+    listContent: {
+        paddingBottom: 80,
     },
     file: {
+        borderRadius: borderRadius.lg,
+        padding: spacing.lg,
+        marginBottom: spacing.md,
         borderWidth: 1,
-        margin: 10
+        ...shadows.md,
     },
-    inside: {
-        borderWidth: 1,
-        marginTop: 10,
-        marginBottom: 10,
+    noteTitle: {
+        ...typography.subtitle,
+        marginBottom: spacing.xs,
+    },
+    noteContent: {
+        ...typography.body,
+    },
+    row: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    column: {
+        flexDirection: 'column',
+        flex: 1,
+        marginRight: spacing.md,
+    },
+    actions: {
+        flexDirection: 'row',
+    },
+    empty: {
+        ...typography.body,
+        textAlign: 'center',
+        marginTop: 60,
+    },
+    fab: {
+        position: 'absolute',
+        bottom: 24,
+        right: 24,
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        justifyContent: 'center',
+        alignItems: 'center',
+        ...shadows.lg,
+    },
+    fabText: {
+        fontSize: 28,
+        color: '#ffffff',
+        lineHeight: 30,
     },
 });
