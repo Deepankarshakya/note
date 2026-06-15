@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { supabase } from "../lib/supabase";
+import { useAuth } from "./AuthContext";
 
 type Note = {
   id: string;
@@ -11,91 +12,81 @@ type NotesContextType = {
   notes: Note[];
   addNote: (note: Note) => void;
   deleteNote: (id: string) => void;
-  updateNote: (
-    id:string,
-    title:string,
-    content:string,
-  )=> void;
+  updateNote: (id: string, title: string, content: string) => void;
 };
 
-const NotesContext =
-  createContext<NotesContextType | null>(null);
+const NotesContext = createContext<NotesContextType | null>(null);
 
-export function NotesProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-    const deleteNote = (id: string) => {
-        setNotes((prev) => 
-        prev.filter((notes) => notes.id !== id))
-    }
+export function NotesProvider({ children }: { children: React.ReactNode }) {
   const [notes, setNotes] = useState<Note[]>([]);
+  const { user } = useAuth();
 
-
-  const loadNotes = async() => {
-    try{
-      const storedNotes = 
-      await AsyncStorage.getItem("notes");
-      
-      if(storedNotes) {
-        setNotes(JSON.parse(storedNotes));
-      }
-    }
-    catch (error){
-      console.log(error);
-    }
-  }
-
+  // Load notes from Supabase when user logs in
   useEffect(() => {
-    loadNotes();
-  }, []);
+    if (!user) {
+      setNotes([]); // clear notes on logout
+      return;
+    }
 
-useEffect(() => {
-  const saveNotes = async () => {
-    try {
-      await AsyncStorage.setItem(
-        "notes",
-        JSON.stringify(notes)
-      );
-    } catch (error) {
-      console.log(error);
+    const loadNotes = async () => {
+      const { data, error } = await supabase
+        .from("notes")
+        .select("id, title, content")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.log("Error loading notes:", error.message);
+      } else {
+        setNotes(data ?? []);
+      }
+    };
+
+    loadNotes();
+  }, [user]); // re-runs when user changes (login/logout)
+
+  const addNote = async (note: Note) => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from("notes")
+      .insert({ title: note.title, content: note.content, user_id: user.id })
+      .select()
+      .single();
+
+    if (error) {
+      console.log("Error adding note:", error.message);
+    } else {
+      setNotes((prev) => [data, ...prev]);
     }
   };
 
-  saveNotes();
-}, [notes]);
+  const deleteNote = async (id: string) => {
+    const { error } = await supabase.from("notes").delete().eq("id", id);
 
-
-
-
-  const addNote = (note: Note) => {
-    setNotes((prev) => [...prev, note]);
+    if (error) {
+      console.log("Error deleting note:", error.message);
+    } else {
+      setNotes((prev) => prev.filter((n) => n.id !== id));
+    }
   };
 
-  const updateNote = (
-    id:string,
-    title: string,
-    content: string
-  )  => {
-  setNotes((prev) =>
-    prev.map((note) =>
-      note.id === id
-        ? { ...note, title, content }
-        : note
-    )
-  );
-};
+  const updateNote = async (id: string, title: string, content: string) => {
+    const { error } = await supabase
+      .from("notes")
+      .update({ title, content })
+      .eq("id", id);
+
+    if (error) {
+      console.log("Error updating note:", error.message);
+    } else {
+      setNotes((prev) =>
+        prev.map((note) => (note.id === id ? { ...note, title, content } : note))
+      );
+    }
+  };
 
   return (
-    <NotesContext.Provider
-      value={{
-        notes,
-        addNote,
-        deleteNote,
-        updateNote,
-      }}
-    >
+    <NotesContext.Provider value={{ notes, addNote, deleteNote, updateNote }}>
       {children}
     </NotesContext.Provider>
   );
@@ -103,12 +94,6 @@ useEffect(() => {
 
 export const useNotes = () => {
   const context = useContext(NotesContext);
-
-  if (!context) {
-    throw new Error(
-      "useNotes must be inside NotesProvider"
-    );
-  }
-
+  if (!context) throw new Error("useNotes must be inside NotesProvider");
   return context;
 };
