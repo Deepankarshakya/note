@@ -1,7 +1,9 @@
-import {View, Text, StyleSheet, ScrollView, Switch, TouchableOpacity, Alert} from "react-native";
+import { View, Text, StyleSheet, ScrollView, Switch, TouchableOpacity, Alert } from "react-native";
 import { useTheme } from "../context/ThemeContext";
 import { useAuth } from "../context/AuthContext";
 import { spacing, borderRadius, typography, shadows } from "../component/theme";
+import NetInfo from "@react-native-community/netinfo";
+import { useEffect, useState } from "react";
 
 export default function SettingsScreen() {
     const { colors, isDark, toggleTheme } = useTheme();
@@ -14,6 +16,15 @@ export default function SettingsScreen() {
         ]);
     };
 
+    const [isConnected, setisConnected] = useState<boolean>(true);
+
+    useEffect(() => {
+        const unsubscribe = NetInfo.addEventListener(state => {
+            setisConnected(!!state.isConnected);
+        });
+        return () => unsubscribe();
+    }, []);
+
     return (
         <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
             <View style={[styles.section, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -24,7 +35,14 @@ export default function SettingsScreen() {
                     </View>
                     <View style={styles.profileInfo}>
                         <Text style={[styles.profileName, { color: colors.textPrimary }]}>{user?.email ?? "User"}</Text>
-                        <Text style={[styles.profileEmail, { color: colors.textSecondary }]}>Active</Text>
+                        <Text
+                            style={[
+                                styles.profileEmail,
+                                { color: isConnected ? "green" : "red" },
+                            ]}
+                        >
+                            {isConnected ? "🟢 Online" : "🔴 Offline"}
+                        </Text>
                     </View>
                 </View>
             </View>
@@ -104,7 +122,7 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     profileName: {
-        fontSize: 18,
+        fontSize: 15,
         fontWeight: '600',
         marginBottom: 2,
     },

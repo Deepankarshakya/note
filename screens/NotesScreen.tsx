@@ -1,10 +1,11 @@
-import { View, Text, FlatList, TextInput, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, FlatList, TextInput, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { useNotes } from "../context/NotesContext";
 import { useState, useLayoutEffect } from "react";
 import { EditorPressable } from "../component/editpressable";
 import { DeletePressable } from "../component/DeletePressable";
 import { useTheme } from "../context/ThemeContext";
 import { spacing, borderRadius, shadows, typography } from "../component/theme";
+import Feather from '@expo/vector-icons/Feather';
 
 export default function NotesScreen({ navigation }: any) {
     const { notes, deleteNote } = useNotes();
@@ -14,7 +15,7 @@ export default function NotesScreen({ navigation }: any) {
         navigation.setOptions({
             headerRight: () => (
                 <TouchableOpacity onPress={() => navigation.navigate("Settings")} style={{ paddingHorizontal: 8 }}>
-                    <Text style={{ fontSize: 22, color: colors.textPrimary }}>{"\u2699"}</Text>
+                    <Feather name="settings" size={20} color="black" />
                 </TouchableOpacity>
             ),
         });
@@ -27,7 +28,8 @@ export default function NotesScreen({ navigation }: any) {
     );
     return (
         <View style={[styles.container, { backgroundColor: colors.background }]}>
-            <Text style={[styles.count, { color: colors.textSecondary }]}>Number of notes: {notes.length}</Text>
+            <Text style={[styles.count, { color: colors.textSecondary }]}>Number of notes: {notes.length}
+            </Text>
             <TextInput
                 placeholder="Search notes..."
                 value={search}
@@ -151,7 +153,7 @@ const styles = StyleSheet.create({
         ...shadows.lg,
     },
     fabText: {
-        fontSize: 28,
+        fontSize: 32,
         color: '#ffffff',
         lineHeight: 30,
     },

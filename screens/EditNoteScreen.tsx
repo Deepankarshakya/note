@@ -28,7 +28,7 @@ export default function EditNoteScreen({
                 <Text style={[styles.notFoundText, { color: colors.textMuted }]}>Note not found</Text>
             </View>
         );
-    }
+    }   
 
     return (
         <KeyboardAvoidingView

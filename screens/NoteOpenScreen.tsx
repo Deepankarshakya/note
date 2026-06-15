@@ -1,4 +1,4 @@
-import {View, Text, StyleSheet, ScrollView} from "react-native";
+import {View, Text, StyleSheet, ScrollView, Image} from "react-native";
 import { useNotes } from "../context/NotesContext";
 import { spacing, borderRadius, typography, shadows } from "../component/theme";
 import { useTheme } from "../context/ThemeContext";
