@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useCallback } from "react";
+import { createContext, useContext, useState, useCallback, useEffect } from "react";
+import {supabase} from "../lib/supabase"
 
 type User = {
   id: string;
@@ -18,21 +19,38 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
 
-  const signIn = useCallback(async (email: string, _password: string): Promise<string | null> => {
-    // TODO: Replace with Supabase auth sign-in
-    setUser({ id: Date.now().toString(), email });
-    return null;
+  useEffect(() => {
+    supabase.auth.getSession().then(({data: { session }}) => {
+      if(session?.user){
+        setUser({id: session.user.id, email:session.user.email!});
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser({ id: session.user.id, email: session.user.email! });
+      } else {
+        setUser(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = useCallback(async (email: string, _password: string): Promise<string | null> => {
-    // TODO: Replace with Supabase auth sign-up
-    setUser({ id: Date.now().toString(), email });
-    return null;
+  const signIn = useCallback(async (email: string, password: string): Promise<string | null> => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    return error ? error.message : null; // null means success
   }, []);
 
-  const signOut = useCallback(() => {
-    // TODO: Replace with Supabase auth sign-out
-    setUser(null);
+  const signUp = useCallback(async (email: string, password: string): Promise<string | null> => {
+    const { error } = await supabase.auth.signUp({ email, password });
+    return error ? error.message : null;
+  }, []);
+
+
+  const signOut = useCallback(async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) console.log("Sign out error:", error.message);
   }, []);
 
   return (
