@@ -1,5 +1,5 @@
-import {NavigationContainer } from "@react-navigation/native";
-import {createNativeStackNavigator} from "@react-navigation/native-stack";
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { StatusBar } from "react-native";
 import { useTheme } from "../context/ThemeContext";
 import { useAuth } from "../context/AuthContext";
@@ -11,6 +11,7 @@ import EditNoteScreen from "../screens/EditNoteScreen";
 import CreateNotesScreen from "../screens/CreateNotesScreen";
 import NoteOpenScreen from "../screens/NoteOpenScreen";
 import SettingsScreen from "../screens/SettingsScreen";
+import { Image, StyleSheet, Text, View } from "react-native"
 
 const Stack = createNativeStackNavigator();
 
@@ -55,7 +56,22 @@ function AppStack() {
             <Stack.Screen
                 name="Notes"
                 component={NotesScreen}
-                options={{ title: "My Notes" }}
+                options={{
+                    headerTitle: () => (
+                        <View style={{flexDirection:'row'}}>
+                            <Image
+                                source={require("../assets/icon.png")}
+                                style={{
+                                    width: 50,
+                                    height: 50,
+                                }}
+                                resizeMode="contain"
+                            />
+                            <Text style={{paddingTop:13}}>My Notes</Text>
+                        </View>
+                    ),
+
+                }}
             />
             <Stack.Screen
                 name="CreateNote"
@@ -85,7 +101,7 @@ export default function RootNavigator() {
     const { colors, isDark } = useTheme();
     const { isAuthenticated } = useAuth();
 
-    return(
+    return (
         <NavigationContainer>
             <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={colors.background} />
             {isAuthenticated ? <AppStack /> : <AuthStack />}
