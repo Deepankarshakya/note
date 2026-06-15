@@ -1,8 +1,5 @@
-import {
-  createContext,
-  useContext,
-  useState,
-} from "react";
+import { createContext, useContext, useState, useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 type Note = {
   id: string;
@@ -33,18 +30,44 @@ export function NotesProvider({
         setNotes((prev) => 
         prev.filter((notes) => notes.id !== id))
     }
-  const [notes, setNotes] = useState<Note[]>([
-    {
-         id: "1",
-    title: "Shopping",
-    content: "Buy milk",
-    },
-  {
-    id: "2",
-    title: "Workout",
-    content: "Pushups 20 mins",
-  },
-  ]);
+  const [notes, setNotes] = useState<Note[]>([]);
+
+
+  const loadNotes = async() => {
+    try{
+      const storedNotes = 
+      await AsyncStorage.getItem("notes");
+      
+      if(storedNotes) {
+        setNotes(JSON.parse(storedNotes));
+      }
+    }
+    catch (error){
+      console.log(error);
+    }
+  }
+
+  useEffect(() => {
+    loadNotes();
+  }, []);
+
+useEffect(() => {
+  const saveNotes = async () => {
+    try {
+      await AsyncStorage.setItem(
+        "notes",
+        JSON.stringify(notes)
+      );
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  saveNotes();
+}, [notes]);
+
+
+
 
   const addNote = (note: Note) => {
     setNotes((prev) => [...prev, note]);
