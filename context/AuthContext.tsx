@@ -4,6 +4,7 @@ import {supabase} from "../lib/supabase"
 type User = {
   id: string;
   email: string;
+  avatarUrl: string | null;
 };
 
 type AuthContextType = {
@@ -12,6 +13,7 @@ type AuthContextType = {
   signIn: (email: string, password: string) => Promise<string | null>;
   signUp: (email: string, password: string) => Promise<string | null>;
   signOut: () => void;
+  updateAvatar: (url: string) => void;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -19,16 +21,20 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
 
+  const buildUser = (supabaseUser: any) : User => ({
+    id: supabaseUser.id,
+    email: supabaseUser.email!,
+    avatarUrl: supabaseUser.user_metadata?.avatar_url ?? null,   
+  })
+
   useEffect(() => {
     supabase.auth.getSession().then(({data: { session }}) => {
-      if(session?.user){
-        setUser({id: session.user.id, email:session.user.email!});
-      }
+      if (session?.user) setUser(buildUser(session.user));
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
-        setUser({ id: session.user.id, email: session.user.email! });
+       setUser(buildUser(session.user));
       } else {
         setUser(null);
       }
@@ -53,8 +59,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) console.log("Sign out error:", error.message);
   }, []);
 
+  const updateAvatar = useCallback ((url: string) => {
+    setUser ((prev) => prev ? {...prev, avatarUrl: url} : prev);
+  }, [])
+
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, signIn, signUp, signOut, updateAvatar }}>
       {children}
     </AuthContext.Provider>
   );

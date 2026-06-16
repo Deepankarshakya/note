@@ -32,14 +32,16 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     content: {
-        padding: spacing.xl,
-        paddingBottom: 40,
+        paddingHorizontal: spacing.xl,
+        paddingTop: spacing.xl,
+        paddingBottom: spacing.xxl,
     },
     title: {
         fontSize: 28,
         fontWeight: "bold",
-        marginBottom: spacing.xl,
-        lineHeight: 34,
+        marginBottom: spacing.md,
+        lineHeight: 32,
+        textAlign:'center',
     },
     card: {
         borderRadius: borderRadius.lg,
@@ -51,6 +53,7 @@ const styles = StyleSheet.create({
         ...typography.body,
         lineHeight: 26,
         fontSize: 16,
+        letterSpacing: 0.2,
     },
     center: {
         flex: 1,
@@ -59,5 +62,6 @@ const styles = StyleSheet.create({
     },
     notFound: {
         ...typography.body,
+        fontSize: 16,
     },
 });
