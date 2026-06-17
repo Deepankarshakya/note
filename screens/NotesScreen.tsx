@@ -1,6 +1,6 @@
 import { View, Text, FlatList, TextInput, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { useNotes } from "../context/NotesContext";
-import { useState, useLayoutEffect } from "react";
+import { useState, useLayoutEffect, useEffect } from "react";
 import { EditorPressable } from "../component/editpressable";
 import { DeletePressable } from "../component/DeletePressable";
 import { useTheme } from "../context/ThemeContext";
@@ -10,6 +10,15 @@ import Feather from '@expo/vector-icons/Feather';
 export default function NotesScreen({ navigation }: any) {
     const { notes, deleteNote } = useNotes();
     const { colors, isDark } = useTheme();
+    const [time, setTime] = useState(new Date());
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setTime(new Date());
+        }, 1000);
+
+        return() => clearInterval(timer);
+    }, [])
 
     useLayoutEffect(() => {
         navigation.setOptions({
@@ -28,8 +37,8 @@ export default function NotesScreen({ navigation }: any) {
     );
     return (
         <View style={[styles.container, { backgroundColor: colors.background }]}>
-            <Text style={[styles.count, { color: colors.textSecondary }]}>Number of notes: {notes.length}
-            </Text>
+            <Text style={[styles.count, { color: colors.textSecondary }]}>Number of notes: {notes.length}</Text>
+            <Text style={[styles.count, { color: colors.textSecondary }]}>Time: {time.toLocaleTimeString()}</Text>
             <TextInput
                 placeholder="Search notes..."
                 value={search}
