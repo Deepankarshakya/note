@@ -62,10 +62,10 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const deleteNote = async (id: string) => {
+const deleteNote = async (id: string) => {
     const note = notes.find((n) => n.id === id);
     if(note?.image_path) {
-      await supabase.storage.from("note-imge").remove([note.image_path]);
+      await supabase.storage.from("note-images").remove([note.image_path]);
     }
 
     const { error } = await supabase.from("notes").delete().eq("id", id);
